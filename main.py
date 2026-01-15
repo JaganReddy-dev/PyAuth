@@ -1,6 +1,10 @@
-def main():
-    print("Hello from pyauth!")
+from fastapi import FastAPI
+from Auth.Apis import register_user
 
+app = FastAPI(
+    title="PyAuth",
+    version="1.0.0",
+    description="Authentication and Authorization package for user identity management",
+)
 
-if __name__ == "__main__":
-    main()
+app.include_router(register_user.router)

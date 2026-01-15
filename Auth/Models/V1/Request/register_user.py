@@ -4,7 +4,17 @@ import re
 import phonenumbers
 
 
-class RegisterUser(BaseModel):
+class RegisterUserRequest(BaseModel):
+    """
+    Register a new user.
+
+    - **first_name**: User's first name
+    - **last_name**: User's last name
+    - **email**: User's email address
+    - **phone**: User's phone number (optional)
+    - **password**: User's password
+    """
+
     first_name: str = Field(
         ..., min_length=2, max_length=50, description="The user's first name"
     )
@@ -66,14 +76,16 @@ class RegisterUser(BaseModel):
 
         try:
             phone_number = phonenumbers.parse(v, None)
+
             if not phonenumbers.is_valid_number(phone_number):
                 raise ValueError("Invalid phone number format")
-        except phonenumbers.NumberParseException:
-            raise ValueError("Invalid phone number format")
+        except Exception as e:
+            raise ValueError(f"Error parsing phone number: {str(e)}")
 
-        return phonenumbers.format_number(
+        result = phonenumbers.format_number(
             phone_number, phonenumbers.PhoneNumberFormat.E164
         )
+        return result
 
     model_config = {
         "json_schema_extra": {
@@ -81,8 +93,12 @@ class RegisterUser(BaseModel):
                 "first_name": "John",
                 "last_name": "Doe",
                 "email": "H6u7o@example.com",
-                "phone": "1234567890",
-                "password": "password123",
+                "phone": "+1234567890",
+                "password": "Password123!",
             }
         }
     }
+
+
+class Message(BaseModel):
+    message: str
