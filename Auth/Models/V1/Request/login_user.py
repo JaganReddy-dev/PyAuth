@@ -5,6 +5,10 @@ import re
 class LoginUserRequest(BaseModel):
     email: EmailStr = Field(..., max_length=100, description="The user's email address")
     password: str = Field(..., min_length=8, description="The user's password")
+    user_id: str
+    roles: dict
+    issuer: str
+    audience: str
 
 
 @field_validator("password")

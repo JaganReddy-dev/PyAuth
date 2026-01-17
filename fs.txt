@@ -1,0 +1,29 @@
+.
+├── Auth
+│   ├── Apis
+│   │   ├── login.py
+│   │   └── register_user.py
+│   ├── Models
+│   │   └── V1
+│   │       ├── Request
+│   │       │   ├── login_user.py
+│   │       │   └── register_user.py
+│   │       └── Response
+│   │           └── register_user.py
+│   ├── Services
+│   │   ├── jwt_gen.py
+│   │   ├── login_user.py
+│   │   └── register_user.py
+│   └── Utils
+│       ├── encrypt.py
+│       ├── jwt_token.py
+│       ├── secret.py
+│       └── utc_now.py
+├── README.md
+├── __init__.py
+├── fs.txt
+├── main.py
+├── pyproject.toml
+└── uv.lock
+
+9 directories, 18 files
