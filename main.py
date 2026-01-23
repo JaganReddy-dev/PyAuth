@@ -1,9 +1,7 @@
+import bootstrap  # noqa: F401
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from Auth.Apis import register_user
-from Auth.Apis import login
+from Auth.Apis.V1.token import router as token_router
 
-load_dotenv()
 
 app = FastAPI(
     title="PyAuth",
@@ -11,5 +9,4 @@ app = FastAPI(
     description="Authentication and Authorization package for user identity management",
 )
 
-app.include_router(register_user.router)
-app.include_router(login.router)
+app.include_router(token_router)
