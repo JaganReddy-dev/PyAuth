@@ -1,6 +1,6 @@
 import bootstrap  # noqa: F401
 from fastapi import FastAPI
-from Auth.Apis.V1.token import router as token_router
+from Auth.Apis.V1.tokens import router as tokens_router
 
 
 app = FastAPI(
@@ -9,4 +9,4 @@ app = FastAPI(
     description="Authentication and Authorization package for user identity management",
 )
 
-app.include_router(token_router)
+app.include_router(tokens_router)

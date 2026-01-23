@@ -1,11 +1,12 @@
 from Auth.Utils.tokens.refresh_token.refresh_token_hash import create_refresh_token_hash
 from Auth.Utils.tokens.refresh_token.raw_refresh_token import create_raw_refresh_token
 from Auth.Utils.secret import get_required_secret
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import uuid
 from Auth.Utils.tokens.jwt_token import encoded_jwt, decoded_jwt
 from Auth.Models.V1.Request.jwt_gen import JWTGenRequest
 from Auth.Utils.utc_now import utc_now
+from Auth.Models.V1.Request.refresh_rt import RefreshToken
 from pprint import pprint  # noqa: F401
 
 
@@ -43,7 +44,6 @@ def create_refresh_token(user_id: str) -> dict:
 def create_jwt_token(payload: JWTGenRequest):
     document = {
         "sub": payload.sub,
-        "email": str(payload.email),
         "iss": "localhost",
         "aud": "user",
     }
@@ -51,18 +51,24 @@ def create_jwt_token(payload: JWTGenRequest):
     jwtDoc = {
         "token": jwt_token,
         "sub": payload.sub,
-        "email": payload.email,
         "iss": document["iss"],
         "aud": document["aud"],
     }
-    jwtDoc["iat"] = int((datetime.now(timezone.utc)).timestamp())
-    jwtDoc["exp"] = int((datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp())
+    now = utc_now()
+    jwtDoc["iat"] = int(now.timestamp())
+    jwtDoc["exp"] = int((now + timedelta(minutes=5)).timestamp())
 
     return jwtDoc
 
 
 def verify_jwt_token(token):
     return decoded_jwt(token, get_jwt_secret(), get_algorithm(), aud="user")
+
+
+def revoke_refresh_token(token: RefreshToken):
+    data = token.model_dump()  # Pydantic v2
+    data.update({"revoked": True, "expiry": int(utc_now().timestamp())})
+    return RefreshToken(**data)
 
 
 # pprint(create_jwt_token(JWTGenRequest(sub="test", email="test@email.com")))
