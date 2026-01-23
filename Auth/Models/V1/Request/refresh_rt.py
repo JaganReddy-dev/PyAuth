@@ -1,5 +1,5 @@
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RefreshToken(BaseModel):
@@ -8,4 +8,4 @@ class RefreshToken(BaseModel):
     token: str
     created_at: int
     expiry: int
-    revoked: bool
+    revoked: bool = Field(default=False)

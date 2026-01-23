@@ -7,7 +7,9 @@ from Auth.Utils.tokens.jwt_token import encoded_jwt, decoded_jwt
 from Auth.Models.V1.Request.jwt_gen import JWTGenRequest
 from Auth.Utils.utc_now import utc_now
 from Auth.Models.V1.Request.refresh_rt import RefreshToken
+from Auth.Models.V1.Request.verify_token import VerifyTokenRequest
 from pprint import pprint  # noqa: F401
+from jwt import exceptions as jwt_exceptions
 
 
 def get_refresh_token_expiry() -> int:
@@ -23,6 +25,8 @@ def get_algorithm() -> str:
 
 
 def create_refresh_token(user_id: str) -> dict:
+    if not user_id:
+        raise ValueError({"detail": "User Id is required!"})
     id = str(uuid.uuid4())
     token = create_refresh_token_hash(create_raw_refresh_token())
     now = utc_now()
@@ -42,6 +46,8 @@ def create_refresh_token(user_id: str) -> dict:
 
 
 def create_jwt_token(payload: JWTGenRequest):
+    if not payload.sub.strip():
+        raise ValueError({"detail": "Sub cannot be empty"})
     document = {
         "sub": payload.sub,
         "iss": "localhost",
@@ -61,12 +67,26 @@ def create_jwt_token(payload: JWTGenRequest):
     return jwtDoc
 
 
-def verify_jwt_token(token):
-    return decoded_jwt(token, get_jwt_secret(), get_algorithm(), aud="user")
+def verify_jwt_token(request: VerifyTokenRequest):
+    if not request.token:
+        raise ValueError({"detail": "Token is required"})
+    try:
+        decoded = decoded_jwt(
+            request.token, get_jwt_secret(), get_algorithm(), aud="user"
+        )
+        return decoded
+    except jwt_exceptions.DecodeError:
+        raise ValueError("Invalid token format")
+    except jwt_exceptions.ExpiredSignatureError:
+        raise ValueError("Token has expired")
+    except jwt_exceptions.InvalidAudienceError:
+        raise ValueError("Token has invalid audience")
+    except jwt_exceptions.PyJWTError as e:
+        raise ValueError(f"JWT error: {str(e)}")
 
 
 def revoke_refresh_token(token: RefreshToken):
-    data = token.model_dump()  # Pydantic v2
+    data = token.model_dump()
     data.update({"revoked": True, "expiry": int(utc_now().timestamp())})
     return RefreshToken(**data)
 
