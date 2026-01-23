@@ -1,4 +1,4 @@
-# PyAuth Playground
+# PyAuth
 
 A FastAPI-based authentication service providing JWT and refresh token management.
 
