@@ -3,6 +3,7 @@ from Auth.Services.V1.token_service import (
     create_refresh_token,
     create_jwt_token,
     revoke_refresh_token,
+    verify_refresh_token,
 )
 from Auth.Models.V1.Request.jwt_gen import JWTGenRequest
 from Auth.Services.V1.token_service import verify_jwt_token
@@ -58,6 +59,7 @@ async def verify_token(token: VerifyTokenRequest = Body(...)) -> dict:
 )
 async def refresh_token(old_rt: RefreshToken = Body(...)) -> dict:
     try:
+        verify_refresh_token(old_rt)
         revoked_rt = revoke_refresh_token(old_rt)
         new_jwt = create_jwt_token(JWTGenRequest(sub=old_rt.user_id))
         new_rt = create_refresh_token(old_rt.user_id)

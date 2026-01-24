@@ -27,8 +27,10 @@ def get_algorithm() -> str:
 def create_refresh_token(user_id: str) -> dict:
     if not user_id:
         raise ValueError({"detail": "User Id is required!"})
+    raw_token = create_raw_refresh_token()
+    refresh_token = create_refresh_token_hash(raw_token)
     id = str(uuid.uuid4())
-    token = create_refresh_token_hash(create_raw_refresh_token())
+    raw_token = raw_token
     now = utc_now()
     created_at = int(now.timestamp())
     expiry = int((now + timedelta(days=get_refresh_token_expiry())).timestamp())
@@ -37,7 +39,8 @@ def create_refresh_token(user_id: str) -> dict:
     document = {
         "id": id,
         "user_id": user_id,
-        "token": token,
+        "raw_token": raw_token,
+        "token": refresh_token,
         "created_at": created_at,
         "expiry": expiry,
         "revoked": revoked,
@@ -54,15 +57,15 @@ def create_jwt_token(payload: JWTGenRequest):
         "aud": "user",
     }
     jwt_token = encoded_jwt(document, get_jwt_secret(), get_algorithm())
+    now = utc_now()
     jwtDoc = {
         "token": jwt_token,
         "sub": payload.sub,
         "iss": document["iss"],
         "aud": document["aud"],
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=5)).timestamp()),
     }
-    now = utc_now()
-    jwtDoc["iat"] = int(now.timestamp())
-    jwtDoc["exp"] = int((now + timedelta(minutes=5)).timestamp())
 
     return jwtDoc
 
@@ -91,14 +94,11 @@ def revoke_refresh_token(token: RefreshToken):
     return RefreshToken(**data)
 
 
-# pprint(create_jwt_token(JWTGenRequest(sub="test", email="test@email.com")))
-# pprint(
-#     verify_jwt_token(
-#         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiZW1haWwiOiJ0ZXN0QGVtYWlsLmNvbSIsImlzcyI6ImxvY2FsaG9zdCIsImF1ZCI6InVzZXIifQ.7MYA3eQIcgyxtYHZUQBZtzAB5LkHi0HbGZnaZqXDPA8",
-#         jwt_secret,
-#         algorithm
-#     )
-# )
-# pprint(
-#     create_refresh_token(str(uuid.uuid4()))
-# )
+def verify_refresh_token(token: RefreshToken):
+    if not token.token or not token.raw_token:
+        raise ValueError({"detail": "Token and Raw Token are required"})
+    hashed_token = create_refresh_token_hash(token.raw_token)
+    if hashed_token == token.token:
+        return True
+    else:
+        raise ValueError("Invalid refresh token")
