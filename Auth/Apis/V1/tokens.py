@@ -75,6 +75,7 @@ async def refresh_token(old_rt: RefreshToken = Body(...)) -> dict:
 )
 async def revoke_token(old_rt: RefreshToken = Body(...)) -> dict:
     try:
+        verify_refresh_token(old_rt)
         revoked_rt = revoke_refresh_token(old_rt)
         return revoked_rt.model_dump()
     except ValueError as e:
